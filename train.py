@@ -28,3 +28,23 @@ parser.add_argument('--dataset', default='PCam', type=str,
 parser.add_argument('--model', default='res32', type=str,
                     help='model (res32 [default])')
 args = parser.parse_args()
+
+
+def build_model():
+    if args.model == 'res32':
+        model = ResNet32(args.num_class)
+    return model
+
+
+def adjust_learning_rate(optimizer, epochs):
+    lr = args.lr * ((0.1 ** int(epochs >= 60)) * (0.1 ** int(epochs >= 90)))  # For WRN-28-10
+    for param_group in optimizer.param_groups:
+        param_group['lr'] = lr
+
+
+model = build_model()
+optimizer_model = torch.optim.SGD(model.params(), args.lr, momentum=args.momentum, weight_decay=args.weight_decay)
+
+if __name__ == '__main__':
+    for epoch in range(args.epochs):
+        adjust_learning_rate(optimizer_model, epoch)
